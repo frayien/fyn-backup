@@ -2,6 +2,9 @@
 #include <filesystem>
 #include <string>
 
+#include <boost/program_options.hpp>
+
+namespace po = boost::program_options;
 namespace fs = std::filesystem;
 using namespace std::string_literals;
 
@@ -10,35 +13,31 @@ int main(int argc, char* argv[])
     fs::path path_in;
     fs::path path_out;
 
-    for(int p = 1; p < argc; ++p)
+    po::options_description desc("Allowed options");
+    desc.add_options()
+        ("help", "produce help message")
+        ("input,i", po::value<fs::path>(), "input path")
+        ("output,o", po::value<fs::path>(), "output path")
+    ;
+
+    po::variables_map vm;
+    po::store(po::parse_command_line(argc, argv, desc), vm);
+    po::notify(vm);    
+
+    if (vm.count("help"))
     {
-        if(argv[p] == "-o"s)
-        {
-            p++;
-            if(!(p < argc))
-            {
-                std::cerr << "output invalid" << std::endl;
-                return -1;
-            }
+        std::cout << desc << "\n";
+        return 1;
+    }
 
-            path_out = argv[p];
-        }
-        else if(argv[p] == "-i"s)
-        {
-            p++;
-            if(!(p < argc))
-            {
-                std::cerr << "input invalid" << std::endl;
-                return -1;
-            }
+    if (vm.count("input"))
+    {
+        std::cout << "Compression level was set to " << vm["input"].as<fs::path>() << ".\n";
+    }
 
-            path_in = argv[p];
-        }
-        else
-        {
-            std::cerr << "argument inconnu : " << argv[p] << std::endl;
-            return -1;
-        }
+    if (vm.count("output"))
+    {
+        std::cout << "Compression level was set to " << vm["output"].as<fs::path>() << ".\n";
     }
 
     if(!fs::exists(path_out))
